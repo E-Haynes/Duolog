@@ -1,0 +1,79 @@
+<!-- templates/read_file.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read File</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>File Details</h1>
+    </header>
+
+    <main>
+        <div>
+            <h2>{{ file.title }}</h2>
+            <p>{{ file.description }}</p>
+        </div>
+        <a href="{{ url_for('file_index') }}">Back to File Index</a>
+    </main>
+   <!-- templates/read_file.html -->
+
+<!-- ... (existing file details) -->
+
+<p><strong>Role:</strong> {{ file.role }}</p>
+
+<!-- Add controls for text-to-speech -->
+<button id="textToSpeechBtn">Listen to Text</button>
+<label for="speed">Speed:</label>
+<input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
+<label for="voice">Voice:</label>
+<select id="voice"></select>
+
+<!-- ... (rest of the file details) -->
+
+<script>
+    // JavaScript code for text-to-speech using Web Speech API
+    document.getElementById('textToSpeechBtn').addEventListener('click', function() {
+        var text = "{{ file.title }}. {{ file.description }}";
+
+        // Get selected speed value
+        var speed = parseFloat(document.getElementById('speed').value);
+
+        // Get selected voice value
+        var selectedVoice = document.getElementById('voice').value;
+
+        var utterance = new SpeechSynthesisUtterance(text);
+
+        // Set speed
+        utterance.rate = speed;
+
+        // Set voice
+        if (selectedVoice) {
+            var voices = window.speechSynthesis.getVoices();
+            utterance.voice = voices.find(voice => voice.name === selectedVoice);
+        }
+
+        window.speechSynthesis.speak(utterance);
+    });
+
+    // Populate the voice select dropdown
+    window.speechSynthesis.onvoiceschanged = function() {
+        var voices = window.speechSynthesis.getVoices();
+        var voiceDropdown = document.getElementById('voice');
+
+        voices.forEach(function(voice) {
+            var option = document.createElement('option');
+            option.textContent = voice.name;
+            option.value = voice.name;
+            voiceDropdown.appendChild(option);
+        });
+    };
+</script>
+
+</script>
+</body>
+</html>
