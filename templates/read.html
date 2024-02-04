@@ -6,61 +6,268 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Read File</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
+
     <header>
-        <h1>File Details</h1>
-    </header>
+      <h1>File Details</h1>
+  </header>
 
-    <main>
-        <div>
-            <h2>{{ file.title }}</h2>
-            <p>{{ file.description }}</p>
-        </div>
-        <a href="{{ url_for('file_index') }}">Back to File Index</a>
-    </main>
-   <!-- templates/read_file.html -->
+  <main>
+      <div class="file-details">
+          <h2>{{ file.title }}</h2>
+          <p id="description">{{ file.description }}</p>
+          <a href="{{ url_for('file_index') }}">Back to File Index</a>
+      </div>
 
-<!-- ... (existing file details) -->
 
-<p><strong>Role:</strong> {{ file.role }}</p>
 
-<!-- Add controls for text-to-speech -->
-<button id="textToSpeechBtn">Listen to Text</button>
-<label for="speed">Speed:</label>
-<input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
-<label for="voice">Voice:</label>
-<select id="voice"></select>
+      <div class="commands-container">
+          ,<h2>Order your information.</h2>
+          <label for="role">Pick your role!</label>
+          <input type="text" id="role" placeholder="Pick your role...">
 
-<!-- ... (rest of the file details) -->
+          <label for="speed">Adjust the speed</label>
+          <input type="range" id="speed" min="0.5" max="2" step="0.1" value="1">
+
+          <label for="voice">Select your default voice </label>
+          <select id="voice"></select>
+
+          <label for="numberActors">Number of Actors:</label>
+          <input type="range" id="numberActors" min="1" max="10" step="1" value="1">
+
+          <div id="typebox-container" class="typebox-container">
+              <!-- Typeboxes will be dynamically added here -->
+          </div>
+
+          <button id="textToSpeechBtn">Play</button>
+          <button id="pauseBtn">Pause</button>
+          <button id="resumeBtn">Resume</button>
+          <button id="stopBtn">Stop</button>
+
+      </div>
+  </main>
 
 <script>
-    // JavaScript code for text-to-speech using Web Speech API
-    document.getElementById('textToSpeechBtn').addEventListener('click', function() {
-        var text = "{{ file.title }}. {{ file.description }}";
 
-        // Get selected speed value
-        var speed = parseFloat(document.getElementById('speed').value);
+  const namesArray = ['Alex', 'Alice', 'Alva', 'Amelie', 'Anna', 'Carmit', 'Damayanti', 'Daniel','Diego', 'Ellen','Fiona', 'Fred', 'Ioana', 'Joana', 'Jorge', 'Juan', 'Kanya', 'Karen', 'Kyoko', 'Laura','Lekha', 'Luca', 'Luciana', 'Maged', 'Mariska', 'Mei-Jia', 'Melina', 'Milena', 'Moira','Monica', 'Nora','Paulina', 'Rishi', 'Samantha', 'Sara', 'Satu', 'Sin-ji', 'Tessa', 'Thomas','Ting-Ting', 'Veena', 'Victoria', 'Xander', 'Yelda', 'Yuna', 'Yuri', 'Zosia', 'Zuzana'];
 
-        // Get selected voice value
-        var selectedVoice = document.getElementById('voice').value;
+  function updateTypeboxes() {
+    // Get the range input value
+    var numberOfActors = document.getElementById('numberActors').value;
+    // Get the container for typeboxes
+    var typeboxContainer = document.getElementById('typebox-container');
 
-        var utterance = new SpeechSynthesisUtterance(text);
+    // Clear previous typeboxes
+    typeboxContainer.innerHTML = '';
 
-        // Set speed
-        utterance.rate = speed;
+    // Create new typeboxes sbased on the range input value
+    for (var i = 1; i <= numberOfActors; i++) {
+        var typebox = document.createElement('input');
+        typebox.type = 'text';
+        typebox.id = 'voice-actor'+i;
+        typebox.name = 'voice-actor' + i;
+        typebox.placeholder = 'Voice of Actor ' + i;
 
-        // Set voice
-        if (selectedVoice) {
-            var voices = window.speechSynthesis.getVoices();
-            utterance.voice = voices.find(voice => voice.name === selectedVoice);
+        var namebox = document.createElement('input');
+        namebox.type = 'text';
+        namebox.id ='actor'+i;
+        namebox.name = 'actor' + i;
+        namebox.placeholder = 'Name of Actor ' + i;
+        typeboxContainer.appendChild(namebox);
+        typeboxContainer.appendChild(typebox);
+    }
+  }
+
+  var rangeInput = document.getElementById('numberActors');
+  rangeInput.addEventListener('input', updateTypeboxes);
+
+  // Functions for sorting
+  function breakTextIntoSections(test) {
+    const sections = [];
+    const regex = /\b[A-Z]{2,}\b/g; // Word with at least two uppercase letters
+    let matches;
+
+    while ((matches = regex.exec(test)) !== null) {
+        const startIndex = matches.index;
+        const endIndex = regex.lastIndex;
+
+        if (startIndex > 0) {
+            // Add the text before the uppercase word
+            sections.push(test.substring(0, startIndex).trim());
         }
 
-        window.speechSynthesis.speak(utterance);
+        // Add the uppercase word
+        sections.push(matches[0]);
+
+        // Update the current index
+        test = test.substring(endIndex);
+        regex.lastIndex = 0; // Reset lastIndex for the next iteration
+    }
+    return sections;
+  }
+
+  //Function for Filtering
+
+  function filterArray(array) {
+    const myHash = {};
+    let m = 0
+    for (let i = 0; i < array.length; i++) {
+        if(i % 2 === 0) {
+            m += 1;
+            myHash[m] = {"name": array[i], "line": array[i+1] };
+        }
+    }
+    return myHash;
+  }
+
+
+  // select the voices from the file
+  function parseVoicesSelection() {
+
+    const characters = {};
+
+    for (let i = 1; i <= 2; i++) {
+      const actorId = `actor${i}`;
+      const voiceActorId = `voice-actor${i}`;
+
+      const actorElement = document.getElementById(actorId);
+      const voiceActorElement = document.getElementById(voiceActorId);
+
+      const actorName = actorElement ? actorElement.value : '';
+      const voiceActorName = voiceActorElement ? voiceActorElement.value : '';
+
+      characters[i] = { 'characterName': actorName.toUpperCase(), 'characterVoice': voiceActorName };
+    }
+    return characters;
+  }
+
+  // function estimate time reading
+  function estimateTime(sentence) {
+    const wordPM = 150;
+    const words = sentence.split(' ').length;
+    const seconds = (words/ wordPM) * 60;
+    return seconds * 1000;
+
+  }
+
+    // Function for the sound
+    var shakespearePlayText = document.getElementById('description').innerText;
+    var shakespearePlayHash = filterArray(breakTextIntoSections(shakespearePlayText));
+    var isPlaying = false;
+    var roleChosen = "noclue";
+    var utterance;
+    var counter = 2;
+    var selectedVoice = document.getElementById('voice').value;
+    var defaultVoice = selectedVoice;
+
+
+    // Function for the getting the character voice
+    function getCharacterVoice(characterId) {
+      var hash = parseVoicesSelection();
+      // Check if the characterId exists in the hash
+      if (hash.hasOwnProperty(characterId)) {
+          // Return the character voice
+          var charVoice = hash[characterId]["characterVoice"];
+          if (namesArray.includes(charVoice)) {
+              var charVoice = charVoice;
+          } else {
+              var charVoice = selectedVoice;
+          }
+
+          var charArray= [charVoice, hash[characterId]["characterName"]];
+
+          return charArray
+      } else {
+          // Return a default value or handle the case where the characterId is not found
+          return 'Character ID Not Found';
+      }
+    }
+
+    document.getElementById('textToSpeechBtn').addEventListener('click', function() {
+      // try {
+
+          var text = shakespearePlayHash[counter]["line"];
+          var speed = parseFloat(document.getElementById('speed').value);
+          utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = speed;
+
+          for (let i = 1; i <= 2 ; i++) {
+            var charArray= getCharacterVoice(i);
+
+            if (charArray[1] ==  shakespearePlayHash[counter]["name"]) {
+              selectedVoice = charArray[0];
+            }
+          }
+
+          // FIlter code
+          if (selectedVoice) {
+              var voices = window.speechSynthesis.getVoices();
+              utterance.voice = voices.find(voice => voice.name === selectedVoice);
+          }
+
+          window.speechSynthesis.speak(utterance);
+          isPlaying = true;
+        if(utterance){
+          utterance.onend = function (event) {
+            counter += 1;
+            var roleChosen = document.getElementById('role');
+            var value = roleChosen.value;
+
+
+
+            if (shakespearePlayHash[counter]["name"] == value && value) {
+              counter += 1
+              setTimeout(function() {
+                var element = document.getElementById('textToSpeechBtn');
+
+                if (element) {
+                  element.click();
+                }
+              }, estimateTime(shakespearePlayHash[counter]["line"]));
+
+            } else {
+              var element = document.getElementById('textToSpeechBtn');
+
+              if (element) {
+                element.click();
+              }
+            }
+
+          };
+        };
+
+    }),
+
+
+
+    // Pause the sound
+    document.getElementById('pauseBtn').addEventListener('click', function() {
+        if (isPlaying && utterance) {
+            window.speechSynthesis.pause(utterance);
+            isPlaying = false;
+        }
     });
 
-    // Populate the voice select dropdown
+    // Resume the sound
+    document.getElementById('resumeBtn').addEventListener('click', function() {
+        if (!isPlaying && utterance) {
+            window.speechSynthesis.resume(utterance);
+            isPlaying = true;
+        }
+    });
+
+    // Stop the sound
+    document.getElementById('stopBtn').addEventListener('click', function() {
+        if (isPlaying && utterance) {
+            window.speechSynthesis.cancel(utterance);
+            isPlaying = false;
+        }
+    });
+
+
+
     window.speechSynthesis.onvoiceschanged = function() {
         var voices = window.speechSynthesis.getVoices();
         var voiceDropdown = document.getElementById('voice');
@@ -72,8 +279,11 @@
             voiceDropdown.appendChild(option);
         });
     };
-</script>
+
+
 
 </script>
+
+
 </body>
 </html>
