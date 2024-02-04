@@ -3,20 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sleek Landing Page</title>
+    <title>Welcome</title>
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
 
     <header>
-        <h1>Your Sleek Landing Page</h1>
+        <!-- Container for buttons at the top left corner -->
+        <div class="dropdown">
+            <button class="dropbtn">Menu</button>
+            <div class="dropdown-content">
+                <a href="#">FAQ</a>
+                <a href="#">Help</a>
+                <a href="#">Contact Us</a>
+            </div>
+        </div>
     </header>
+
+
 
     <section>
         <div class="content">
-            <h1>Welcome to our website</h1>
-            <p>Discover the amazing features of our product and join thousands of satisfied customers.</p>
-            <a href="{{ url_for('file_index') }}" class="cta-button">Get Started</a>
+            <h1>Welcome to Duolog</h1>
+            <img src="../static/images/duolog.png" alt="Duolog Logo" class="logo">
+            <p>Your personal practice assistant</p>
+            <a href="{{ url_for('file_index') }}" class="cta-button">Get Started!</a>
         </div>
     </section>
 
