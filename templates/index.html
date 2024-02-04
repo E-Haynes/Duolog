@@ -11,14 +11,16 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            background-color: #f5f5f5; /* Beige background color */
+            background-color: #f6e5d5; /* Light beige background color */
         }
 
         header {
-            background-color: #DBCEC0; /* Burgundy header color */
-            color: #000000;
+            background-color: #e3d4c4; /* Light brown header color */
+            color: #520309; /* Dark brown text color */
             text-align: center;
             padding: 20px;
+            border-bottom: 2px solid #7c6d5a; /* Light brown border */
+            border-radius: 8px 8px 0 0; /* Rounded corners top left and right */
         }
 
         main {
@@ -29,15 +31,22 @@
         ul {
             list-style: none;
             padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
         }
 
         li {
-            background-color: #ffffff;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background-color: #eadfcf; /* Light beige file background */
+            border-radius: 8px; /* Rounded corners for file items */
+            margin: 10px;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
+            flex: 0 1 calc(33.33% - 20px); /* Adjust the width here */
+            border: 2px solid #7c6d5a; /* Light brown border */
+            height: 100px; /* Set a fixed height */
+            width: 200px;
         }
 
         li:hover {
@@ -45,39 +54,61 @@
         }
 
         h2 {
-            color: #000000; /* Burgundy text color */
+            color: #520309; /* Dark brown text color */
             margin-bottom: 5px;
         }
 
         p {
-            color: #666666;
+            color: #520309; /* Dark brown text color */
             margin-bottom: 5px;
         }
 
         .file-info {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column; /* Adjust to display elements vertically */
+            justify-content: flex-start; /* Align items to the top */
         }
 
         footer {
-            background-color: #DBCEC0; /* Burgundy footer color */
-            color: #000000;
+            background-color: #e3d4c4; /* Light brown footer color */
+            color: #520309; /* Dark brown text color */
             text-align: center;
             padding: 10px 0;
             position: fixed;
             bottom: 0;
             width: 100%;
+            border-top: 2px solid #7c6d5a; /* Light brown border */
+            border-radius: 0 0 8px 8px; /* Rounded corners bottom left and right */
         }
 
         footer a {
-            color: #ffffff;
+            color: #520309; /* Dark brown text color */
             text-decoration: none;
             font-weight: bold;
+            margin: 0 10px;
+            transition: color 0.3s ease;
         }
 
         footer a:hover {
-            text-decoration: underline;
+            color: #7c6d5a; /* Dark brown hover color */
+        }
+
+        /* Style for Add File Button */
+        .add-file-button {
+            display: block;
+            width: 120px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #520309; /* Dark brown background color */
+            color: #ffffff;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-file-button:hover {
+            background-color: #4B0B0E; /* Dark brown hover background color */
         }
     </style>
 </head>
@@ -89,14 +120,11 @@
     <main>
         <ul>
             {% for file in files %}
-                <a href="/files/{{file.id}}">
+                <a href="/files/{{file.id}}" style="text-decoration:none;">
                     <li>
                         <div class="file-info">
-                            <div>
-                                <h2>{{ file.title }}</h2>
-                                <p>{{ file.description }}</p>
-                            </div>
-                            <p>{{ file.role }}</p>
+                            <h2>{{ file.title }}</h2>
+                            <p>{{ file.role }}</p> <!-- Moved file role below file title -->
                         </div>
                     </li>
                 </a>
@@ -105,6 +133,8 @@
     </main>
 
     <footer>
+        <!-- Add File Button -->
+        <a href="{{ url_for('create_file') }}" class="add-file-button">Add File</a>
         <a href="{{ url_for('landingPage') }}">Back to Landing Page</a>
     </footer>
 </body>
