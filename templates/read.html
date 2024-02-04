@@ -49,8 +49,8 @@
 
   function updateTypeboxes() {
     // Get the range input value
-    var numberOfActors = document.getElementById('players').value;
-
+    var numberOfActors = document.getElementById('numberActors').value;
+    console.log(numberOfActors);
     // Get the container for typeboxes
     var typeboxContainer = document.getElementById('typebox-container');
 
@@ -59,17 +59,19 @@
 
     // Create new typeboxes based on the range input value
     for (var i = 1; i <= numberOfActors; i++) {
+        console.log("boxx")
         var typebox = document.createElement('input');
         typebox.type = 'text';
-        typebox.id = 'actor'+i;
-        typebox.name = 'actor' + i;
-        typebox.placeholder = 'Actor ' + i;
+        typebox.id = 'voice-actor'+i;
+        typebox.name = 'voice-actor' + i;
+        typebox.placeholder = 'Voice of Actor ' + i;
 
         var namebox = document.createElement('input');
         namebox.type = 'text';
         namebox.id ='actor'+i;
         namebox.name = 'actor' + i;
-        namebox.placeholder = 'Actor ' + i;
+        namebox.placeholder = 'Name of Actor ' + i;
+        typeboxContainer.appendChild(namebox);
         typeboxContainer.appendChild(typebox);
     }
   }
@@ -78,8 +80,6 @@
   rangeInput.addEventListener('input', updateTypeboxes);
 
   // Functions for sorting
-
-
   function breakTextIntoSections(test) {
     const sections = [];
     const regex = /\b[A-Z]{2,}\b/g; // Word with at least two uppercase letters
@@ -118,43 +118,94 @@
     return myHash;
   }
 
+
+  // select the voices from the file
+  function parseVoicesSelection() {
+
+    const characters = {};
+
+    for (let i = 1; i <= 3; i++) {
+      const actorId = `actor${i}`;
+      const voiceActorId = `voice-actor${i}`;
+
+      const actorElement = document.getElementById(actorId);
+      const voiceActorElement = document.getElementById(voiceActorId);
+
+      const actorName = actorElement ? actorElement.value : '';
+      const voiceActorName = voiceActorElement ? voiceActorElement.value : '';
+
+      characters[i] = { 'char': actorName.toUpperCase(), 'voice': voiceActorName };
+    }
+    return characters;
+  }
+
+  // function estimate time reading
+  function estimateTime(sentence) {
+    const wordPM = 100;
+    const words = sentence.split(' ').length;
+    const seconds = (words/ wordPM) * 60;
+    return seconds * 1000;
+
+  }
+
     // Function for the sound
     var shakespearePlayText = document.getElementById('description').innerText;
     var shakespearePlayHash = filterArray(breakTextIntoSections(shakespearePlayText));
     var isPlaying = false;
-    var roleChosen = "NAME";
+    var roleChosen = "noclue";
     var utterance;
-    var counter = 1;
+    var counter = 2;
     var selectedVoice = document.getElementById('voice').value;
 
     document.getElementById('textToSpeechBtn').addEventListener('click', function() {
-        var text = shakespearePlayHash[counter]["line"];
-        var speed = parseFloat(document.getElementById('speed').value);
-        utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = speed;
-        utterance.volume = volume;
+      try {
+          var text = shakespearePlayHash[counter]["line"];
+          var speed = parseFloat(document.getElementById('speed').value);
+          utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = speed;
 
-        if (selectedVoice) {
-            var voices = window.speechSynthesis.getVoices();
-            utterance.voice = voices.find(voice => voice.name === selectedVoice);
+          console.log(parseVoicesSelection());
+          // FIlter code
+          if (selectedVoice) {
+              var voices = window.speechSynthesis.getVoices();
+              utterance.voice = voices.find(voice => voice.name === selectedVoice);
+          }
+
+          window.speechSynthesis.speak(utterance);
+          isPlaying = true;
+        } catch {
+          console.log('Error')
         }
 
-        window.speechSynthesis.speak(utterance);
-        isPlaying = true;
         if(utterance){
-
           utterance.onend = function (event) {
-
             counter += 1;
-            var element = document.getElementById('textToSpeechBtn');
+            var roleChosen = document.getElementById('role');
+            var value = roleChosen.value;
+            if (shakespearePlayHash[counter]["name"] == value && value) {
+              counter += 1
+              setTimeout(function() {
+                console.log("Skipping thing");
+                var element = document.getElementById('textToSpeechBtn');
 
-            if (element) {
-              element.click();
+                if (element) {
+                  element.click();
+                }
+              }, estimateTime(shakespearePlayHash[counter]["line"]));
+
+            } else {
+              var element = document.getElementById('textToSpeechBtn');
+
+              if (element) {
+                element.click();
+              }
             }
 
           };
         };
+
     }),
+
     // Pause the sound
     document.getElementById('pauseBtn').addEventListener('click', function() {
         if (isPlaying && utterance) {
